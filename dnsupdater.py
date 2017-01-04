@@ -1,3 +1,4 @@
+import ipaddress
 import pathlib
 import re
 from abc import abstractmethod, ABC
@@ -8,7 +9,7 @@ DATABASE_LOCATION = "/srv/dns/zones/"
 
 class DnsUpdater(ABC):
     @abstractmethod
-    def set_ip_for_domain(self, domain: str, ip: str):
+    def set_record_for_domain(self, domain: str, ip4: ipaddress.IPv4Address = None, ip6: ipaddress.IPv6Address = None):
         return NotImplemented
 
 
@@ -26,18 +27,25 @@ class BindUpdater(DnsUpdater):
             except Exception as e:
                 raise RuntimeError("Error when parsing domain pattern " + pattern) from e
 
-    def set_ip_for_domain(self, domain: str, ip: str):
-        print("STUB setting ip " + ip + " for domain " + domain)
-        match = False
+    def set_record_for_domain(self, domain: str, ip4: ipaddress.IPv4Address = None, ip6: ipaddress.IPv6Address = None):
+        match = None
         for pattern, filename in self._domain_map.items():
             if re.match(pattern, domain):
-                match = True
-                print("Matching file: " + filename)
+                match = filename
+                break
 
-        if not match:
+        if match is None:
             raise UnknownDomainError(domain)
+
+        # TODO
+        raise UserDomainError(domain)
 
 
 class UnknownDomainError(Exception):
     def __init__(self, domain: str):
-        super().__init__("Unknown domain " + domain)
+        super().__init__("Unknown domain: " + domain)
+
+
+class UserDomainError(Exception):
+    def __init__(self, domain: str):
+        super().__init__("Domain is a user domain: " + domain)
