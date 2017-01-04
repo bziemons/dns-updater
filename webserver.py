@@ -17,9 +17,14 @@ def main():
         except Exception as e:
             raise RuntimeError("Something was wrong with the port: " + sys.argv[1]) from e
 
-    with http.server.HTTPServer(("", port), RequestHandler) as httpd:
-        print("Serving at port", port)
+    httpd = http.server.HTTPServer(("", port), RequestHandler)
+    print("Serving at port", port)
+    try:
         httpd.serve_forever()
+    except KeyboardInterrupt:
+        httpd.server_close()
+    finally:
+        print("Server closing")
 
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
@@ -30,9 +35,11 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         print()
         print("Got", self.command, "from", self.client_address)
+        for k, v in self.headers.items():
+            print(str(k) + ":", v)
         print()
-        updater.set_ip_for_domain("domain", "ip")
-        super().close_connection = True
+        updater.set_ip_for_domain("test.ch94.de", "ip")
+        self.close_connection = True
 
     def do_HEAD(self):
         print()
