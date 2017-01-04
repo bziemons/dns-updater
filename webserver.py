@@ -1,6 +1,8 @@
 import http.server
+import signal
 
 import sys
+import threading
 
 import dnsupdater
 
@@ -19,12 +21,20 @@ def main():
 
     httpd = http.server.HTTPServer(("", port), RequestHandler)
     print("Serving at port", port)
+    main_thread = threading.get_ident()
+
+    def sigterm_handler(signum, frame):
+        print("Shutting down...")
+        signal.pthread_kill(main_thread, signal.SIGINT)
+
+    signal.signal(signal.SIGTERM, sigterm_handler)
+
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         httpd.server_close()
     finally:
-        print("Server closing")
+        print("Server shut down")
 
 
 class RequestHandler(http.server.BaseHTTPRequestHandler):
