@@ -2,7 +2,7 @@ import pathlib
 import re
 from abc import abstractmethod, ABC
 
-SUBDOMAIN = "^\w((\w|\-)*\w)?\."
+SUBDOMAIN = r"^\w((\w|\-)*\w)?\."
 DATABASE_LOCATION = "/srv/dns/zones/"
 
 
@@ -22,10 +22,17 @@ class BindUpdater(DnsUpdater):
         regexlist = list(self._domain_map.keys())
         for pattern in regexlist:
             try:
-                re.template(pattern)
+                re.compile(pattern)
             except Exception as e:
                 raise RuntimeError("Error when parsing domain pattern " + pattern) from e
 
     def set_ip_for_domain(self, domain: str, ip: str):
         print("STUB setting ip " + ip + " for domain " + domain)
+        match = False
+        for pattern, filename in self._domain_map.items():
+            if re.match(pattern, domain):
+                match = True
+                print("Matching file: " + filename)
 
+        if not match:
+            print("No match found for domain " + domain)
