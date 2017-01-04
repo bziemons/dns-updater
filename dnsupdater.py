@@ -35,4 +35,9 @@ class BindUpdater(DnsUpdater):
                 print("Matching file: " + filename)
 
         if not match:
-            print("No match found for domain " + domain)
+            raise UnknownDomainError(domain)
+
+
+class UnknownDomainError(Exception):
+    def __init__(self, domain: str):
+        super().__init__("Unknown domain " + domain)

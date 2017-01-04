@@ -35,20 +35,20 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def do_GET(self):
         print()
         print("Got", self.command, "from", self.client_address)
+        print("Request:", self.requestline)
+        print("Headers:")
+        print("--------")
         for k, v in self.headers.items():
             print(str(k) + ":", v)
         print()
-        updater.set_ip_for_domain("test.ch94.de", "ip")
-        self.close_connection = True
+        try:
+            updater.set_ip_for_domain("test.ch94.de", "ip")
+        except dnsupdater.UnknownDomainError:
+            self.send_error(404, "Given domain not found")
+            return
 
-    def do_HEAD(self):
-        print()
-        print("(HEAD) Got", self.command, "from", self.client_address)
-        for k, v in self.headers.items():
-            print(str(k) + ":", v)
-        print()
-        self.send_error(500, "Not ready")
-        self.end_headers()
+        self.send_error(500, "Not implemented")
+        self.close_connection = True
 
 
 if __name__ == "__main__":
