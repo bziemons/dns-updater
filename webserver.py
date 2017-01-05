@@ -5,6 +5,7 @@ import ipaddress
 import signal
 import sys
 import threading
+import traceback
 from urllib.parse import urlparse, parse_qs
 
 import dnsupdater
@@ -130,6 +131,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.send_error(409, "Given domain is permanently unconfigurable")
             return
         except dnsupdater.TemporarilyUnconfigurableError:
+            traceback.print_exc(file=sys.stderr)
             self.send_error(503, "Given domain is temporarily unconfigurable")
             return
 
