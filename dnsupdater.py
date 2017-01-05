@@ -35,12 +35,15 @@ class BindUpdater(DnsUpdater):
             phandle.stdin.writelines(nsupdate_bytelines)
             phandle.stdin.flush()
             stdout, stderr = phandle.communicate(timeout=10)
-            print()
-            print("STDOUT::\n", stdout)
-            print()
-            print("STDERR::\n", stderr)
-            print()
+            if len(stdout) != 0:
+                stdout_output = codecs.decode(stdout)
+                print("NSUPDATE::\n", stdout_output)
             phandle.stdin.close()
+
+            if len(stderr) != 0:
+                stderr_output = codecs.decode(stderr, errors='replace')
+                raise TemporarilyUnconfigurableError(domain) from RuntimeError(stderr_output)
+
             try:
                 phandle.wait(timeout=3)
             except subprocess.TimeoutExpired as e:
