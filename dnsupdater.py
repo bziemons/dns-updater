@@ -28,7 +28,8 @@ class BindUpdater(DnsUpdater):
 
         pipe = subprocess.PIPE
         with subprocess.Popen(NSUPDATE_CMDLINE, stderr=pipe, stdout=pipe, stdin=pipe) as phandle:
-            phandle.stdin.writelines(*nsupdate_lines)
+            phandle.stdin.writelines(nsupdate_lines)
+            phandle.stdin.flush()
             stdout, stderr = phandle.communicate(timeout=10)
             print()
             print("STDOUT::\n", stdout)
@@ -36,6 +37,11 @@ class BindUpdater(DnsUpdater):
             print("STDERR::\n", stderr)
             print()
             phandle.stdin.close()
+            try:
+                phandle.wait(timeout=3)
+            except subprocess.TimeoutExpired as e:
+                phandle.kill()
+                raise TemporarilyUnconfigurableError(domain) from e
 
 
 class UnknownDomainError(Exception):
