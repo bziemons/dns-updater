@@ -1,3 +1,4 @@
+import codecs
 import ipaddress
 import subprocess
 from abc import abstractmethod, ABC
@@ -17,15 +18,21 @@ class BindUpdater(DnsUpdater):
         if 'dyndns' in domain:
             raise UnconfigurableDomainError(domain)
 
+        nsupdate_lines = list()
+        nsupdate_lines.append()
+        nsupdate_lines.append("update delete " + domain + " A\n")
+        if ip6 is not None:
+            nsupdate_lines.append("update add " + domain + " 60 IN AAAA " + str(ip6) + "\n")
+        if ip4 is not None:
+            nsupdate_lines.append("update add " + domain + " 60 IN A " + str(ip4) + "\n")
+        nsupdate_lines.append("send\n")
+
+        nsupdate_bytelines = list(map(lambda s: codecs.encode(s), nsupdate_lines))
+        print("STDIN::\n", nsupdate_bytelines)
+
         pipe = subprocess.PIPE
         with subprocess.Popen(NSUPDATE_CMDLINE, stderr=pipe, stdout=pipe, stdin=pipe) as phandle:
-            phandle.stdin.write("update delete " + domain + " AAAA\n")
-            phandle.stdin.write("update delete " + domain + " A\n")
-            if ip6 is not None:
-                phandle.stdin.write("update add " + domain + " 60 IN AAAA " + str(ip6) + "\n")
-            if ip4 is not None:
-                phandle.stdin.write("update add " + domain + " 60 IN A " + str(ip4) + "\n")
-            phandle.stdin.write("send\n")
+            phandle.stdin.writelines(nsupdate_bytelines)
             phandle.stdin.flush()
             stdout, stderr = phandle.communicate(timeout=10)
             print()
