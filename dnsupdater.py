@@ -17,18 +17,15 @@ class BindUpdater(DnsUpdater):
         if 'dyndns' in domain:
             raise UnconfigurableDomainError(domain)
 
-        nsupdate_lines = list()
-        nsupdate_lines.append("update delete " + domain + " AAAA\n")
-        nsupdate_lines.append("update delete " + domain + " A\n")
-        if ip6 is not None:
-            nsupdate_lines.append("update add " + domain + " 60 IN AAAA " + str(ip6) + "\n")
-        if ip4 is not None:
-            nsupdate_lines.append("update add " + domain + " 60 IN A " + str(ip4) + "\n")
-        nsupdate_lines.append("send\n")
-
         pipe = subprocess.PIPE
         with subprocess.Popen(NSUPDATE_CMDLINE, stderr=pipe, stdout=pipe, stdin=pipe) as phandle:
-            phandle.stdin.writelines(nsupdate_lines)
+            phandle.stdin.write("update delete " + domain + " AAAA\n")
+            phandle.stdin.write("update delete " + domain + " A\n")
+            if ip6 is not None:
+                phandle.stdin.write("update add " + domain + " 60 IN AAAA " + str(ip6) + "\n")
+            if ip4 is not None:
+                phandle.stdin.write("update add " + domain + " 60 IN A " + str(ip4) + "\n")
+            phandle.stdin.write("send\n")
             phandle.stdin.flush()
             stdout, stderr = phandle.communicate(timeout=10)
             print()
