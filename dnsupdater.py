@@ -19,7 +19,7 @@ class BindUpdater(DnsUpdater):
             raise UnconfigurableDomainError(domain)
 
         nsupdate_lines = list()
-        nsupdate_lines.append()
+        nsupdate_lines.append("update delete " + domain + " AAAA\n")
         nsupdate_lines.append("update delete " + domain + " A\n")
         if ip6 is not None:
             nsupdate_lines.append("update add " + domain + " 60 IN AAAA " + str(ip6) + "\n")
